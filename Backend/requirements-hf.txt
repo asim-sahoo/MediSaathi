@@ -1,0 +1,13 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+onnxruntime==1.16.3
+numpy>=1.24.3,<2.0.0
+Pillow==10.0.1
+python-multipart==0.0.6
+
+# CAM heatmap generation - HuggingFace Spaces has enough memory!
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.1.0+cpu
+torchvision==0.16.0+cpu
+grad-cam>=1.5.0
+opencv-python-headless>=4.8.0

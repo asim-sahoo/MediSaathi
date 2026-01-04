@@ -14,15 +14,19 @@ allowed_origins = [
     "http://localhost:5173",
     "http://localhost:3000",
     "https://medi-saathi.vercel.app",
+    "https://medisaathi.vercel.app",
     "https://medisaathi-api.onrender.com",
 ]
 # Add custom frontend URL from environment
 if os.getenv("FRONTEND_URL"):
     allowed_origins.append(os.getenv("FRONTEND_URL"))
 
+# On HuggingFace Spaces or local dev, allow all origins
+is_production = os.getenv("RENDER") and not os.getenv("SPACE_ID")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins if os.getenv("RENDER") else ["*"],
+    allow_origins=allowed_origins if is_production else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
