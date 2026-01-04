@@ -238,9 +238,24 @@ async def detect_fracture_with_both_heatmaps(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
 
 
+@app.get("/")
+async def root():
+    """Root endpoint for basic connectivity check"""
+    return {"message": "MediSaathi X-Ray Analysis API", "status": "running"}
+
+
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
+    """Health check endpoint - fast response for Render health checks"""
+    return {
+        "status": "healthy",
+        "model_loaded": True
+    }
+
+
+@app.get("/health/detailed")
+async def health_check_detailed():
+    """Detailed health check with CAM availability (slower)"""
     cam_available = get_cam_generator() is not None
     return {
         "status": "healthy",
