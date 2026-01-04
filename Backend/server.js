@@ -21,7 +21,7 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://medisaathi.vercel.app',
+  'https://medi-saathi.vercel.app',
   'https://medisaathi-frontend.vercel.app',
   process.env.FRONTEND_URL
 ].filter(Boolean);
@@ -70,7 +70,11 @@ async function connectToDatabase() {
 
   try {
     const { MongoMemoryServer } = require('mongodb-memory-server');
-    const mongod = await MongoMemoryServer.create();
+    const mongod = await MongoMemoryServer.create({
+      binary: {
+        version: '7.0.4'  // Use version compatible with Debian 12
+      }
+    });
     const uri = mongod.getUri();
     await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
     console.log('Started in-memory MongoDB for development');
@@ -248,8 +252,8 @@ async function callGeminiAPI(prompt, context = []) {
 
 // Health Check (both root and /api for Render compatibility)
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
+  res.json({
+    status: 'healthy',
     service: 'medisaathi-api',
     timestamp: new Date().toISOString()
   });
@@ -446,27 +450,27 @@ app.post('/api/analyze/xray', authenticateToken, upload.single('image'), async (
     const includeHeatmaps = req.query.heatmaps === 'true';
     const PY_BASE_URL = process.env.PY_DETECT_URL || 'http://localhost:8000/detect';
     const PY_DETECT_URL = includeHeatmaps ? PY_BASE_URL.replace('/detect', '/detect/heatmap/both') : PY_BASE_URL;
-    
+
     let yoloData = null;
 
     try {
       // Forward to Python service using node-fetch compatible FormData
       const FormData = require('form-data');
       const form = new FormData();
-      form.append('file', req.file.buffer, { 
-        filename: req.file.originalname || 'xray.jpg', 
-        contentType: req.file.mimetype || 'image/jpeg' 
+      form.append('file', req.file.buffer, {
+        filename: req.file.originalname || 'xray.jpg',
+        contentType: req.file.mimetype || 'image/jpeg'
       });
 
       // Use node-fetch for proper form-data handling
       const nodeFetch = require('node-fetch');
-      const pyResp = await nodeFetch(PY_DETECT_URL, { 
-        method: 'POST', 
+      const pyResp = await nodeFetch(PY_DETECT_URL, {
+        method: 'POST',
         body: form
       });
       const pyText = await pyResp.text();
       const pyData = JSON.parse(pyText);
-      
+
       // Map FastAPI response to expected format
       if (pyData && typeof pyData.probability !== 'undefined') {
         yoloData = {
@@ -475,7 +479,7 @@ app.post('/api/analyze/xray', authenticateToken, upload.single('image'), async (
           confidence: pyData.confidence,
           probability: pyData.probability,
           fracture_detected: pyData.fracture_detected,
-          summary: pyData.fracture_detected 
+          summary: pyData.fracture_detected
             ? `Fracture detected with ${(pyData.probability * 100).toFixed(1)}% probability. Please consult a medical professional for proper diagnosis.`
             : `No fracture detected. Confidence: ${(pyData.confidence * 100).toFixed(1)}%. If symptoms persist, please consult a medical professional.`,
           // CAM heatmap data

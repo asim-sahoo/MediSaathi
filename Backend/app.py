@@ -13,8 +13,7 @@ app = FastAPI(title="MediSaathi X-Ray Analysis API", version="1.0.0")
 allowed_origins = [
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://medisaathi.vercel.app",
-    "https://medisaathi-frontend.vercel.app",
+    "https://medi-saathi.vercel.app",
     "https://medisaathi-api.onrender.com",
 ]
 # Add custom frontend URL from environment
