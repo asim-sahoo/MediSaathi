@@ -16,7 +16,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
-        value: "3.11"
+        value: "3.11.0"
     autoDeploy: true
 
   # Node.js Express Backend (Auth, Chat, API Gateway)
