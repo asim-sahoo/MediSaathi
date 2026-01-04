@@ -47,5 +47,4 @@ services:
           name: medisaathi-ai
           type: web
           property: host
-          envVarKey: PY_DETECT_URL
     autoDeploy: true
