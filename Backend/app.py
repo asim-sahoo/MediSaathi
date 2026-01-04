@@ -62,41 +62,41 @@ IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 def preprocess_image(image: Image.Image) -> np.ndarray:
     """
     Preprocess image for DenseNet-169 model
-    
+
     Args:
         image: PIL Image in RGB format
-        
+
     Returns:
         numpy array of shape (1, 3, 224, 224) with normalized values
     """
     # Resize to 224x224
     image = image.resize((224, 224), Image.BILINEAR)
-    
+
     # Convert to numpy array (H, W, C) with values 0-255
     img_array = np.array(image, dtype=np.float32)
-    
+
     # Normalize to [0, 1]
     img_array = img_array / 255.0
-    
+
     # Apply ImageNet normalization
     img_array = (img_array - IMAGENET_MEAN) / IMAGENET_STD
-    
+
     # Transpose to (C, H, W) format
     img_array = np.transpose(img_array, (2, 0, 1))
-    
+
     # Add batch dimension (1, C, H, W)
     img_array = np.expand_dims(img_array, axis=0)
-    
+
     return img_array
 
 @app.post("/detect")
 async def detect_fracture(file: UploadFile = File(...)):
     """
     Detect fractures in X-ray images using DenseNet-169 ONNX model
-    
+
     Args:
         file: Uploaded image file
-        
+
     Returns:
         Dictionary with probability, fracture_detected flag, and confidence
     """
@@ -104,28 +104,28 @@ async def detect_fracture(file: UploadFile = File(...)):
         # Read and validate image
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
-        
+
         # Preprocess image
         input_array = preprocess_image(image)
-        
+
         # Run inference
         outputs = session.run(None, {input_name: input_array})
-        
+
         # Extract probability (output shape is (1, 1))
         probability = float(outputs[0].flatten()[0])
-        
+
         # Binary prediction at threshold 0.5
         fracture_detected = probability > 0.3
-        
+
         # Calculate confidence
         confidence = probability if fracture_detected else (1 - probability)
-        
+
         return {
             "probability": probability,
             "fracture_detected": fracture_detected,
             "confidence": confidence
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
 
@@ -137,11 +137,11 @@ async def detect_fracture_with_heatmap(
 ):
     """
     Detect fractures and generate CAM heatmap visualization
-    
+
     Args:
         file: Uploaded X-ray image file
         method: CAM method to use ('ScoreCAM' or 'XGradCAM')
-        
+
     Returns:
         Dictionary with prediction results and base64 encoded heatmap
     """
@@ -149,18 +149,18 @@ async def detect_fracture_with_heatmap(
         # Read image
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
-        
+
         # Get prediction from ONNX model
         input_array = preprocess_image(image)
         outputs = session.run(None, {input_name: input_array})
         probability = float(outputs[0].flatten()[0])
         fracture_detected = probability > 0.3
         confidence = probability if fracture_detected else (1 - probability)
-        
+
         # Try to generate CAM heatmap
         heatmap_base64 = None
         cam_method_used = None
-        
+
         generator = get_cam_generator()
         if generator:
             try:
@@ -169,7 +169,7 @@ async def detect_fracture_with_heatmap(
                 cam_method_used = method
             except Exception as cam_error:
                 print(f"CAM generation failed: {cam_error}")
-        
+
         return {
             "probability": probability,
             "fracture_detected": fracture_detected,
@@ -177,7 +177,7 @@ async def detect_fracture_with_heatmap(
             "heatmap_base64": heatmap_base64,
             "cam_method": cam_method_used
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
 
@@ -186,10 +186,10 @@ async def detect_fracture_with_heatmap(
 async def detect_fracture_with_both_heatmaps(file: UploadFile = File(...)):
     """
     Detect fractures and generate both ScoreCAM and XGradCAM heatmaps
-    
+
     Args:
         file: Uploaded X-ray image file
-        
+
     Returns:
         Dictionary with prediction results and base64 encoded heatmaps for both methods
     """
@@ -197,25 +197,25 @@ async def detect_fracture_with_both_heatmaps(file: UploadFile = File(...)):
         # Read image
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
-        
+
         # Get prediction from ONNX model
         input_array = preprocess_image(image)
         outputs = session.run(None, {input_name: input_array})
         probability = float(outputs[0].flatten()[0])
         fracture_detected = probability > 0.3
         confidence = probability if fracture_detected else (1 - probability)
-        
+
         # Generate original image base64
         img_resized = image.resize((224, 224))
         buffer = io.BytesIO()
         img_resized.save(buffer, format='PNG')
         buffer.seek(0)
         original_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-        
+
         # Try to generate CAM heatmaps
         scorecam_base64 = None
         xgradcam_base64 = None
-        
+
         generator = get_cam_generator()
         if generator:
             try:
@@ -224,7 +224,7 @@ async def detect_fracture_with_both_heatmaps(file: UploadFile = File(...)):
                 xgradcam_base64 = results['xgradcam_base64']
             except Exception as cam_error:
                 print(f"CAM generation failed: {cam_error}")
-        
+
         return {
             "probability": probability,
             "fracture_detected": fracture_detected,
@@ -233,7 +233,7 @@ async def detect_fracture_with_both_heatmaps(file: UploadFile = File(...)):
             "scorecam_base64": scorecam_base64,
             "xgradcam_base64": xgradcam_base64
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
 
