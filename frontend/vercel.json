@@ -5,8 +5,8 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://medisaathi-api.onrender.com/:path*"
+      "source": "/api/(.*)",
+      "destination": "https://medisaathi-api.onrender.com/api/$1"
     }
   ],
   "headers": [
