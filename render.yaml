@@ -1,0 +1,51 @@
+# Render Blueprint - Deploy all services together
+# https://render.com/docs/blueprint-spec
+
+services:
+  # FastAPI Python Service (X-ray Analysis + CAM Heatmaps)
+  - type: web
+    name: medisaathi-ai
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: Backend
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+    autoDeploy: true
+
+  # Node.js Express Backend (Auth, Chat, API Gateway)
+  - type: web
+    name: medisaathi-api
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: Backend
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: PORT
+        value: "8080"
+      - key: MONGO_CONN
+        sync: false  # Set this in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false  # Set this in Render dashboard
+      - key: GEMINI_MODEL
+        value: "gemini-1.5-flash"
+      - key: PY_DETECT_URL
+        fromService:
+          name: medisaathi-ai
+          type: web
+          property: host
+          envVarKey: PY_DETECT_URL
+    autoDeploy: true

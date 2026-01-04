@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Environment files (IMPORTANT - don't commit secrets!)
+.env
+.env.local
+.env.*.local
+Backend/.env
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Cache
+.cache/
+.pytest_cache/
+.mypy_cache/
+
+# Temporary files
+*.tmp
+*.temp
