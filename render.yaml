@@ -1,24 +1,8 @@
-# Render Blueprint - Deploy all services together
+# Render Blueprint - Deploy Node.js Backend
 # https://render.com/docs/blueprint-spec
+# Note: X-ray AI detection is hosted on HuggingFace Spaces
 
 services:
-  # FastAPI Python Service (X-ray Analysis + CAM Heatmaps)
-  - type: web
-    name: medisaathi-ai
-    runtime: python
-    plan: free
-    region: oregon
-    rootDir: Backend
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /health
-    envVars:
-      - key: PYTHON_VERSION
-        value: "3.11.0"
-    autoDeploy: true
-
   # Node.js Express Backend (Auth, Chat, API Gateway)
   - type: web
     name: medisaathi-api
@@ -43,8 +27,5 @@ services:
       - key: GEMINI_MODEL
         value: "gemini-1.5-flash"
       - key: PY_DETECT_URL
-        fromService:
-          name: medisaathi-ai
-          type: web
-          property: host
+        value: "https://asimsahoo-medisaathi-ai.hf.space/detect"
     autoDeploy: true
